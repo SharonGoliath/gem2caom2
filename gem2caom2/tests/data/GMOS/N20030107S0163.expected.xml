@@ -46,7 +46,7 @@
       <caom2:polarization/>
       <caom2:artifacts>
         <caom2:artifact caom2:id="00000000-0000-0000-9201-91db2b6ff7da" caom2:lastModified="2018-11-08T07:59:15.250" caom2:maxLastModified="2018-11-08T07:59:15.250" caom2:metaChecksum="md5:4341d649e8f77ed01dd42185ef365d2b" caom2:accMetaChecksum="md5:2be1884b2d201cb26dcb4de3004017f7" caom2:metaProducer="gem2caom2/0.8.1">
-          <caom2:uri>gemini:GEM/N20030107S0163.fits</caom2:uri>
+          <caom2:uri>gemini:GEMINI/N20030107S0163.fits</caom2:uri>
           <caom2:productType>science</caom2:productType>
           <caom2:releaseType>data</caom2:releaseType>
           <caom2:contentType>application/fits</caom2:contentType>
@@ -133,7 +133,7 @@
                       </caom2:error>
                       <caom2:function>
                         <caom2:naxis>1</caom2:naxis>
-                        <caom2:delta>0.001157423611040463</caom2:delta>
+                        <caom2:delta>0.001157423611111111</caom2:delta>
                         <caom2:refCoord>
                           <caom2:pix>0.5</caom2:pix>
                           <caom2:val>52646.60446064814</caom2:val>
@@ -141,8 +141,8 @@
                       </caom2:function>
                     </caom2:axis>
                     <caom2:timesys>UTC</caom2:timesys>
-                    <caom2:exposure>100.001399993896</caom2:exposure>
-                    <caom2:resolution>100.001399993896</caom2:resolution>
+                    <caom2:exposure>100.0014</caom2:exposure>
+                    <caom2:resolution>100.0014</caom2:resolution>
                   </caom2:time>
                 </caom2:chunk>
               </caom2:chunks>
@@ -223,7 +223,7 @@
                       </caom2:error>
                       <caom2:function>
                         <caom2:naxis>1</caom2:naxis>
-                        <caom2:delta>0.001157423611040463</caom2:delta>
+                        <caom2:delta>0.001157423611111111</caom2:delta>
                         <caom2:refCoord>
                           <caom2:pix>0.5</caom2:pix>
                           <caom2:val>52646.60446064814</caom2:val>
@@ -231,8 +231,8 @@
                       </caom2:function>
                     </caom2:axis>
                     <caom2:timesys>UTC</caom2:timesys>
-                    <caom2:exposure>100.001399993896</caom2:exposure>
-                    <caom2:resolution>100.001399993896</caom2:resolution>
+                    <caom2:exposure>100.0014</caom2:exposure>
+                    <caom2:resolution>100.0014</caom2:resolution>
                   </caom2:time>
                 </caom2:chunk>
               </caom2:chunks>
@@ -313,7 +313,7 @@
                       </caom2:error>
                       <caom2:function>
                         <caom2:naxis>1</caom2:naxis>
-                        <caom2:delta>0.001157423611040463</caom2:delta>
+                        <caom2:delta>0.001157423611111111</caom2:delta>
                         <caom2:refCoord>
                           <caom2:pix>0.5</caom2:pix>
                           <caom2:val>52646.60446064814</caom2:val>
@@ -321,8 +321,8 @@
                       </caom2:function>
                     </caom2:axis>
                     <caom2:timesys>UTC</caom2:timesys>
-                    <caom2:exposure>100.001399993896</caom2:exposure>
-                    <caom2:resolution>100.001399993896</caom2:resolution>
+                    <caom2:exposure>100.0014</caom2:exposure>
+                    <caom2:resolution>100.0014</caom2:resolution>
                   </caom2:time>
                 </caom2:chunk>
               </caom2:chunks>
@@ -330,7 +330,7 @@
           </caom2:parts>
         </caom2:artifact>
         <caom2:artifact caom2:id="00000000-0000-0000-8b2f-2292ce0c006c" caom2:lastModified="2018-11-08T07:59:15.250" caom2:maxLastModified="2018-11-08T07:59:15.250" caom2:metaChecksum="md5:8039f7c6051f91b6f7305f5f10f82e64" caom2:accMetaChecksum="md5:7ee8e8fd27eb87a5168aaf1fbb233eb2" caom2:metaProducer="gem2caom2/0.8.1">
-          <caom2:uri>gemini:GEM/N20030107S0163.jpg</caom2:uri>
+          <caom2:uri>gemini:GEMINI/N20030107S0163.jpg</caom2:uri>
           <caom2:productType>preview</caom2:productType>
           <caom2:releaseType>data</caom2:releaseType>
           <caom2:contentType>image/jpeg</caom2:contentType>

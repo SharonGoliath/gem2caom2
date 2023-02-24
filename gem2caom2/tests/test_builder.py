@@ -68,51 +68,100 @@
 #
 
 import os
-import pytest
 
-from mock import patch
+from mock import Mock, patch
 
-from caom2pipe import manage_composable as mc
-from gem2caom2 import A_SCHEME, SCHEME, V_SCHEME, COLLECTION, ARCHIVE
-from gem2caom2 import builder
-from gem2caom2 import external_metadata as em
+from caom2pipe.manage_composable import Config, StorageName, TaskType
+from gem2caom2 import builder, gemini_metadata
 
 import gem_mocks
 
 
-@patch('gem2caom2.external_metadata.CadcTapClient')
-@patch('gem2caom2.external_metadata.get_obs_metadata')
-def test_builder(obs_metadata_mock, tap_client_mock):
-    obs_metadata_mock.side_effect = gem_mocks.mock_get_obs_metadata
+@patch('gem2caom2.gemini_metadata.GeminiMetadataReader._retrieve_headers')
+@patch('gem2caom2.gemini_metadata.GeminiMetadataReader._retrieve_json')
+def test_builder(file_info_mock, header_mock, test_config):
+    file_info_mock.side_effect = gem_mocks.mock_get_obs_metadata
 
-    test_config = mc.Config()
     test_config.working_directory = '/test_files'
-    test_config.proxy_fqn = os.path.join(gem_mocks.TEST_DATA_DIR,
-                                         'test_proxy.pem')
-    em.init_global(config=test_config)
-    test_subject = builder.GemObsIDBuilder(test_config)
+    test_config.proxy_fqn = os.path.join(
+        gem_mocks.TEST_DATA_DIR, 'test_proxy.pem'
+    )
+    test_reader = gemini_metadata.GeminiMetadataReader(Mock(), Mock(), Mock())
+    test_metadata = gemini_metadata.GeminiMetadataLookup(test_reader)
+    test_subject = builder.GemObsIDBuilder(
+        test_config, test_reader, test_metadata
+    )
 
-    test_entry = 'S20050825S0143.fits'
-    for support in [False, True]:
-        test_config.features.supports_latest_client = support
-        test_config.features.use_file_names = True
-        for task_type in [mc.TaskType.INGEST, mc.TaskType.SCRAPE]:
+    test_entries = ['S20050825S0143.fits', 'TX20131117_raw.3002.fits']
+    for test_entry in test_entries:
+        for task_type in [TaskType.INGEST, TaskType.SCRAPE]:
             test_config.task_types = [task_type]
             test_result = test_subject.build(test_entry)
-            assert test_result is not None, \
-                f'expect a result support {support}'
-            expected_path = COLLECTION if support else ARCHIVE
-            assert test_result.file_uri == \
-                   f'{SCHEME}:{expected_path}/{test_entry}', 'wrong file uri'
-            assert test_result.prev_uri == \
-                   f'{SCHEME}:{expected_path}/{test_result.prev}', \
-                   'wrong preview uri'
-            expected_scheme = V_SCHEME if support else A_SCHEME
-            assert test_result.thumb_uri == \
-                   f'{expected_scheme}:{expected_path}/{test_result.thumb}', \
-                   'wrong thumb uri'
+            assert test_result is not None, f'expect a result'
+            assert (
+                test_result.file_uri == f'{test_config.scheme}:{test_config.collection}/{test_entry}'
+            ), 'wrong file uri'
+            assert (
+                test_result.prev_uri == f'{test_config.scheme}:{test_config.collection}/{test_result.prev}'
+            ), 'wrong preview uri'
+            assert (
+                test_result.thumb_uri == f'{test_config.preview_scheme}:{test_config.collection}/{test_result.thumb}'
+            ), 'wrong thumb uri'
+            assert test_result.obs_id is not None, f'expect an obs id'
 
-        test_config.task_types = [mc.TaskType.INGEST]
-        test_config.features.use_file_names = False
-        with pytest.raises(mc.CadcException):
-            test_result = test_subject.build(test_entry)
+
+@patch('gem2caom2.gemini_metadata.retrieve_json')
+@patch('caom2pipe.reader_composable.FileMetadataReader._retrieve_headers')
+@patch('caom2pipe.reader_composable.FileMetadataReader._retrieve_file_info')
+def test_builder_local(file_info_mock, header_mock, json_mock, test_config):
+    json_mock.side_effect = gem_mocks.mock_retrieve_json
+    test_reader = gemini_metadata.GeminiFileMetadataReader(
+        Mock(), Mock(), Mock()
+    )
+    test_metadata = gemini_metadata.GeminiMetadataLookup(test_reader)
+    test_config = Config()
+    test_config.data_sources = ['/test_files']
+    test_config.use_local_files = True
+    test_entry = '/test_files/S20191214S0301.fits'
+    test_config.task_types = [TaskType.INGEST]
+    test_subject = builder.GemObsIDBuilder(
+        test_config, test_reader, test_metadata
+    )
+    test_result = test_subject.build(test_entry)
+    assert test_result is not None, 'expect a result'
+    assert test_result.file_uri == 'gemini:GEMINI/S20191214S0301.fits', 'file'
+    assert test_result.prev_uri == 'gemini:GEMINI/S20191214S0301.jpg', 'prev'
+    assert (
+        test_result.thumb_uri == 'cadc:GEMINI/S20191214S0301_th.jpg'
+    ), 'thumb'
+    assert (
+        test_result.source_names[0] == '/test_files/S20191214S0301.fits'
+    ), 'wrong source_names'
+
+
+@patch(
+    'gem2caom2.gemini_metadata.GeminiFileMetadataReader._retrieve_file_info'
+)
+@patch('gem2caom2.gemini_metadata.GeminiFileMetadataReader._retrieve_headers')
+@patch('gem2caom2.gemini_metadata.retrieve_json')
+def test_different_obs_id_cases(json_mock, headers_mock, file_info_mock, test_config):
+    json_mock.side_effect = gem_mocks.mock_retrieve_json
+    # these are all special cases, where the data label from Gemini is not
+    # what's used as the observationID value
+    test_cases = {
+        'N20100104S0208.fits.header': 'GN-2009B-Q-121-15-001',
+        'N20200810A0490r.fits': 'N20200810A0490',
+        'N20200810A0490r': 'N20200810A0490',
+        'SDCH_20200131_0010.fits': 'GS-CAL20200131-10-0131',
+        'GN2001BQ013-04': 'GN2001BQ013-04',
+    }
+    test_reader = gemini_metadata.GeminiFileMetadataReader(
+        Mock(), Mock(), Mock()
+    )
+    test_metadata = gemini_metadata.GeminiMetadataLookup(test_reader)
+    test_subject = builder.GemObsIDBuilder(test_config, test_reader, test_metadata)
+    for file_name, obs_id in test_cases.items():
+        test_result = test_subject.build(file_name)
+        assert test_result is not None, 'expect a result'
+        assert test_result.obs_id == obs_id, f'got {test_result.obs_id}'
+        assert file_name.split('.')[0] in test_result.source_names

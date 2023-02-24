@@ -68,12 +68,12 @@
 #
 
 from datetime import datetime
-from mock import patch
+from mock import call, Mock, patch
 from gem2caom2 import data_source
 import gem_mocks
 
 
-@patch('caom2pipe.manage_composable.query_endpoint')
+@patch('caom2pipe.manage_composable.query_endpoint_session')
 def test_incremental_source(query_mock):
     # https://archive.gemini.edu/jsonsummary/canonical/entrytimedaterange=
     # 2021-01-01T20:03:00.000000%202021-01-01T22:13:00.000000/
@@ -81,12 +81,16 @@ def test_incremental_source(query_mock):
     # get results
     query_mock.side_effect = gem_mocks.mock_query_endpoint_2
 
-    test_subject = data_source.IncrementalSource()
+    test_subject = data_source.IncrementalSource(Mock())
     assert test_subject is not None, 'expect construction success'
-    prev_exec_time = datetime(year=2021, month=1, day=1,
-                              hour=20, minute=3, second=0).timestamp()
-    exec_time = datetime(year=2021, month=1, day=1,
-                         hour=22, minute=13, second=0).timestamp()
+    test_reporter = Mock()
+    test_subject.reporter = test_reporter
+    prev_exec_time = datetime(
+        year=2021, month=1, day=1, hour=20, minute=3, second=0
+    ).timestamp()
+    exec_time = datetime(
+        year=2021, month=1, day=1, hour=22, minute=13, second=0
+    ).timestamp()
     test_result = test_subject.get_time_box_work(prev_exec_time, exec_time)
     assert test_result is not None, 'expect a result'
     assert len(test_result) == 2, 'wrong number of results'
@@ -96,12 +100,47 @@ def test_incremental_source(query_mock):
     test_entry = test_result.popleft()
     assert test_entry.entry_name == 'N20210101S0042.fits', 'wrong 2nd file'
     assert test_entry.entry_ts == 1609535567.250666, 'wrong 2nd timestamp'
+    assert test_reporter.capture_todo.called, 'capture_todo'
+    assert test_reporter.capture_todo.call_count == 1, 'wrong number of capture_todo calls'
+    test_reporter.capture_todo.assert_called_with(2, 0, 0)
 
     # get nothing
-    prev_exec_time = datetime(year=2019, month=1, day=1,
-                              hour=20, minute=3, second=0).timestamp()
-    exec_time = datetime(year=2019, month=2, day=1,
-                         hour=22, minute=13, second=0).timestamp()
+    prev_exec_time = datetime(
+        year=2019, month=1, day=1, hour=20, minute=3, second=0
+    ).timestamp()
+    exec_time = datetime(
+        year=2019, month=2, day=1, hour=22, minute=13, second=0
+    ).timestamp()
     test_result = test_subject.get_time_box_work(prev_exec_time, exec_time)
     assert test_result is not None, 'expect a result'
     assert len(test_result) == 0, 'wrong number of empty result list'
+    assert test_reporter.capture_todo.called, 'capture_todo'
+    assert test_reporter.capture_todo.call_count == 2, 'wrong number of capture_todo calls'
+    test_reporter.capture_todo.assert_has_calls([call(2, 0, 0), call(0, 0, 0)])
+
+
+@patch('caom2pipe.manage_composable.query_endpoint_session')
+def test_incremental_source_reproduce(query_mock):
+    # https://archive.gemini.edu/jsonsummary/canonical/NotFail/notengineering/
+    # entrytimedaterange=
+    # 2022-03-14T17:30:05.000006%202022-03-14T17:31:05.000006/
+    # ?orderby=entrytime
+    # get results
+    query_mock.side_effect = gem_mocks.mock_query_endpoint_reproduce
+
+    test_subject = data_source.IncrementalSource(Mock())
+    assert test_subject is not None, 'expect construction success'
+    test_reporter = Mock()
+    test_subject.reporter = test_reporter
+    prev_exec_time = datetime(
+        year=2022, month=1, day=1, hour=20, minute=3, second=0
+    ).timestamp()
+    exec_time = datetime(
+        year=2022, month=4, day=1, hour=22, minute=13, second=0
+    ).timestamp()
+    test_result = test_subject.get_time_box_work(prev_exec_time, exec_time)
+    assert test_result is not None, 'expect a result'
+    assert len(test_result) == 2, 'wrong number of results'
+    assert test_reporter.capture_todo.called, 'capture_todo'
+    assert test_reporter.capture_todo.call_count == 1, 'wrong number of capture_todo calls'
+    test_reporter.capture_todo.assert_called_with(2, 0, 0), 'wrong capture_todo args'

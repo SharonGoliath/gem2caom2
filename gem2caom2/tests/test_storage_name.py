@@ -67,50 +67,37 @@
 # ***********************************************************************
 #
 
-from gem2caom2 import GemName, SCHEME, ARCHIVE
-from gem2caom2 import external_metadata as em
+from os import path
+from mock import patch
+import gem_mocks
+from gem2caom2 import GemName
 
 
 def test_is_valid():
-    mock_obs_id = 'GN-2013B-Q-28-150-002'
-    assert GemName(file_name='anything.fits',
-                   obs_id=mock_obs_id).is_valid()
-    assert GemName(file_name='anything.jpg',
-                   obs_id=mock_obs_id).is_valid()
+    assert GemName(file_name='anything.fits').is_valid()
+    assert GemName(file_name='anything.jpg').is_valid()
 
 
-def test_storage_name():
-    em.set_ofr(None)
-    mock_obs_id = 'GN-2013B-Q-28-150-002'
-    test_sn = GemName(file_name='N20131203S0006i.fits.bz2',
-                      obs_id=mock_obs_id)
-    assert test_sn.file_uri == f'{SCHEME}:{ARCHIVE}/N20131203S0006i.fits'
-    assert test_sn.file_name == 'N20131203S0006i.fits'
-    assert test_sn.prev == 'N20131203S0006i.jpg'
-    assert test_sn.thumb == 'N20131203S0006i_th.jpg'
-    assert test_sn.compressed_file_name is None
-    assert test_sn.get_file_id(test_sn.file_name) == 'N20131203S0006i'
+@patch('cadcutils.net.ws.WsCapabilities.get_access_url')
+@patch('caom2pipe.client_composable.query_tap_client')
+def test_storage_name(tap_mock, cap_mock, test_config):
+    tap_mock.side_effect = gem_mocks.mock_query_tap
+    cap_mock.return_value = 'https://localhost'
+    test_config.proxy_fqn = path.join(gem_mocks.TEST_DATA_DIR, 'cadcproxy.pem')
+    test_config.tap_id = 'ivo://cadc.nrc.ca/test'
+    for extension in ['.gz', '.bz2']:
+        test_sn = GemName(file_name=f'N20131203S0006i.fits{extension}')
+        assert (
+            test_sn.file_uri == f'{test_config.scheme}:{test_config.collection}/N20131203S0006i.fits'
+        )
+        assert test_sn.file_name == f'N20131203S0006i.fits{extension}'
+        assert test_sn.prev == 'N20131203S0006i.jpg'
+        assert test_sn.thumb == 'N20131203S0006i_th.jpg'
+        assert test_sn.file_id == 'N20131203S0006i'
+        assert test_sn.file_uri == f'{test_config.scheme}:{test_config.collection}/N20131203S0006i.fits'
 
-    test_sn = GemName(file_name='S20060920S0137.jpg',
-                      obs_id=mock_obs_id)
-    assert test_sn.file_uri == f'{SCHEME}:{ARCHIVE}/S20060920S0137.jpg'
+    test_sn = GemName(file_name='S20060920S0137.jpg')
+    assert test_sn.file_uri == f'{test_config.scheme}:{test_config.collection}/S20060920S0137.jpg'
     assert test_sn.file_name == 'S20060920S0137.jpg'
     assert test_sn.prev == 'S20060920S0137.jpg'
     assert test_sn.thumb == 'S20060920S0137_th.jpg'
-    assert test_sn.compressed_file_name is None
-
-    test_sn = GemName(fname_on_disk='N20100104S0208.fits.header')
-    assert test_sn.obs_id == 'GN-2009B-Q-121-15-001', 'wrong obs id'
-    assert test_sn.file_uri == f'{SCHEME}:{ARCHIVE}/N20100104S0208.fits'
-    assert test_sn.external_urls == 'https://archive.gemini.edu/fullheader/' \
-                                    'N20100104S0208.fits'
-
-    test_sn = GemName(fname_on_disk='N20200810A0490r.fits',
-                      instrument=em.Inst.ALOPEKE)
-    assert test_sn.obs_id == 'N20200810A0490', 'wrong obs id'
-    assert test_sn.product_id == 'N20200810A0490r', 'wrong product id'
-    assert test_sn.file_uri == f'{SCHEME}:{ARCHIVE}/N20200810A0490r.fits'
-    assert test_sn.external_urls == 'https://archive.gemini.edu/fullheader/' \
-                                    'N20200810A0490r.fits'
-    assert test_sn.lineage == f'{test_sn.obs_id}r/{SCHEME}:{ARCHIVE}/' \
-                              f'{test_sn.file_id}.fits', 'wrong lineage'

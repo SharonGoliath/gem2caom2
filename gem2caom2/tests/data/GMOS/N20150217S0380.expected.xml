@@ -48,7 +48,7 @@
       <caom2:time/>
       <caom2:artifacts>
         <caom2:artifact caom2:id="00000000-0000-0000-b38e-f312d4954b78" caom2:lastModified="2018-10-05T11:29:16.870" caom2:maxLastModified="2018-10-05T11:29:16.870" caom2:metaChecksum="md5:0f9c2204aeb9d862c7d1ae73819d944d" caom2:accMetaChecksum="md5:87bd962f52f61d711a87a2aeda770aa2" caom2:metaProducer="gem2caom2/0.8.1">
-          <caom2:uri>gemini:GEM/N20150217S0380.fits</caom2:uri>
+          <caom2:uri>gemini:GEMINI/N20150217S0380.fits</caom2:uri>
           <caom2:productType>calibration</caom2:productType>
           <caom2:releaseType>data</caom2:releaseType>
           <caom2:contentType>application/fits</caom2:contentType>
@@ -98,7 +98,7 @@
                       </caom2:error>
                       <caom2:function>
                         <caom2:naxis>1</caom2:naxis>
-                        <caom2:delta>2.31446298184218e-05</caom2:delta>
+                        <caom2:delta>2.31446759259259e-05</caom2:delta>
                         <caom2:refCoord>
                           <caom2:pix>0.5</caom2:pix>
                           <caom2:val>57070.94874189815</caom2:val>
@@ -151,7 +151,7 @@
                       </caom2:error>
                       <caom2:function>
                         <caom2:naxis>1</caom2:naxis>
-                        <caom2:delta>2.31446298184218e-05</caom2:delta>
+                        <caom2:delta>2.31446759259259e-05</caom2:delta>
                         <caom2:refCoord>
                           <caom2:pix>0.5</caom2:pix>
                           <caom2:val>57070.94874189815</caom2:val>
@@ -204,7 +204,7 @@
                       </caom2:error>
                       <caom2:function>
                         <caom2:naxis>1</caom2:naxis>
-                        <caom2:delta>2.31446298184218e-05</caom2:delta>
+                        <caom2:delta>2.31446759259259e-05</caom2:delta>
                         <caom2:refCoord>
                           <caom2:pix>0.5</caom2:pix>
                           <caom2:val>57070.94874189815</caom2:val>
@@ -257,7 +257,7 @@
                       </caom2:error>
                       <caom2:function>
                         <caom2:naxis>1</caom2:naxis>
-                        <caom2:delta>2.31446298184218e-05</caom2:delta>
+                        <caom2:delta>2.31446759259259e-05</caom2:delta>
                         <caom2:refCoord>
                           <caom2:pix>0.5</caom2:pix>
                           <caom2:val>57070.94874189815</caom2:val>
@@ -310,7 +310,7 @@
                       </caom2:error>
                       <caom2:function>
                         <caom2:naxis>1</caom2:naxis>
-                        <caom2:delta>2.31446298184218e-05</caom2:delta>
+                        <caom2:delta>2.31446759259259e-05</caom2:delta>
                         <caom2:refCoord>
                           <caom2:pix>0.5</caom2:pix>
                           <caom2:val>57070.94874189815</caom2:val>
@@ -363,7 +363,7 @@
                       </caom2:error>
                       <caom2:function>
                         <caom2:naxis>1</caom2:naxis>
-                        <caom2:delta>2.31446298184218e-05</caom2:delta>
+                        <caom2:delta>2.31446759259259e-05</caom2:delta>
                         <caom2:refCoord>
                           <caom2:pix>0.5</caom2:pix>
                           <caom2:val>57070.94874189815</caom2:val>
@@ -416,7 +416,7 @@
                       </caom2:error>
                       <caom2:function>
                         <caom2:naxis>1</caom2:naxis>
-                        <caom2:delta>2.31446298184218e-05</caom2:delta>
+                        <caom2:delta>2.31446759259259e-05</caom2:delta>
                         <caom2:refCoord>
                           <caom2:pix>0.5</caom2:pix>
                           <caom2:val>57070.94874189815</caom2:val>
@@ -469,7 +469,7 @@
                       </caom2:error>
                       <caom2:function>
                         <caom2:naxis>1</caom2:naxis>
-                        <caom2:delta>2.31446298184218e-05</caom2:delta>
+                        <caom2:delta>2.31446759259259e-05</caom2:delta>
                         <caom2:refCoord>
                           <caom2:pix>0.5</caom2:pix>
                           <caom2:val>57070.94874189815</caom2:val>
@@ -522,7 +522,7 @@
                       </caom2:error>
                       <caom2:function>
                         <caom2:naxis>1</caom2:naxis>
-                        <caom2:delta>2.31446298184218e-05</caom2:delta>
+                        <caom2:delta>2.31446759259259e-05</caom2:delta>
                         <caom2:refCoord>
                           <caom2:pix>0.5</caom2:pix>
                           <caom2:val>57070.94874189815</caom2:val>
@@ -575,7 +575,7 @@
                       </caom2:error>
                       <caom2:function>
                         <caom2:naxis>1</caom2:naxis>
-                        <caom2:delta>2.31446298184218e-05</caom2:delta>
+                        <caom2:delta>2.31446759259259e-05</caom2:delta>
                         <caom2:refCoord>
                           <caom2:pix>0.5</caom2:pix>
                           <caom2:val>57070.94874189815</caom2:val>
@@ -628,7 +628,7 @@
                       </caom2:error>
                       <caom2:function>
                         <caom2:naxis>1</caom2:naxis>
-                        <caom2:delta>2.31446298184218e-05</caom2:delta>
+                        <caom2:delta>2.31446759259259e-05</caom2:delta>
                         <caom2:refCoord>
                           <caom2:pix>0.5</caom2:pix>
                           <caom2:val>57070.94874189815</caom2:val>
@@ -681,7 +681,7 @@
                       </caom2:error>
                       <caom2:function>
                         <caom2:naxis>1</caom2:naxis>
-                        <caom2:delta>2.31446298184218e-05</caom2:delta>
+                        <caom2:delta>2.31446759259259e-05</caom2:delta>
                         <caom2:refCoord>
                           <caom2:pix>0.5</caom2:pix>
                           <caom2:val>57070.94874189815</caom2:val>
@@ -734,7 +734,7 @@
                       </caom2:error>
                       <caom2:function>
                         <caom2:naxis>1</caom2:naxis>
-                        <caom2:delta>2.31446298184218e-05</caom2:delta>
+                        <caom2:delta>2.31446759259259e-05</caom2:delta>
                         <caom2:refCoord>
                           <caom2:pix>0.5</caom2:pix>
                           <caom2:val>57070.94874189815</caom2:val>
@@ -787,7 +787,7 @@
                       </caom2:error>
                       <caom2:function>
                         <caom2:naxis>1</caom2:naxis>
-                        <caom2:delta>2.31446298184218e-05</caom2:delta>
+                        <caom2:delta>2.31446759259259e-05</caom2:delta>
                         <caom2:refCoord>
                           <caom2:pix>0.5</caom2:pix>
                           <caom2:val>57070.94874189815</caom2:val>
@@ -840,7 +840,7 @@
                       </caom2:error>
                       <caom2:function>
                         <caom2:naxis>1</caom2:naxis>
-                        <caom2:delta>2.31446298184218e-05</caom2:delta>
+                        <caom2:delta>2.31446759259259e-05</caom2:delta>
                         <caom2:refCoord>
                           <caom2:pix>0.5</caom2:pix>
                           <caom2:val>57070.94874189815</caom2:val>
@@ -893,7 +893,7 @@
                       </caom2:error>
                       <caom2:function>
                         <caom2:naxis>1</caom2:naxis>
-                        <caom2:delta>2.31446298184218e-05</caom2:delta>
+                        <caom2:delta>2.31446759259259e-05</caom2:delta>
                         <caom2:refCoord>
                           <caom2:pix>0.5</caom2:pix>
                           <caom2:val>57070.94874189815</caom2:val>
@@ -946,7 +946,7 @@
                       </caom2:error>
                       <caom2:function>
                         <caom2:naxis>1</caom2:naxis>
-                        <caom2:delta>2.31446298184218e-05</caom2:delta>
+                        <caom2:delta>2.31446759259259e-05</caom2:delta>
                         <caom2:refCoord>
                           <caom2:pix>0.5</caom2:pix>
                           <caom2:val>57070.94874189815</caom2:val>
@@ -999,7 +999,7 @@
                       </caom2:error>
                       <caom2:function>
                         <caom2:naxis>1</caom2:naxis>
-                        <caom2:delta>2.31446298184218e-05</caom2:delta>
+                        <caom2:delta>2.31446759259259e-05</caom2:delta>
                         <caom2:refCoord>
                           <caom2:pix>0.5</caom2:pix>
                           <caom2:val>57070.94874189815</caom2:val>
@@ -1016,7 +1016,7 @@
           </caom2:parts>
         </caom2:artifact>
         <caom2:artifact caom2:id="00000000-0000-0000-b6fd-9683fc3c9771" caom2:lastModified="2018-10-05T11:29:16.870" caom2:maxLastModified="2018-10-05T11:29:16.870" caom2:metaChecksum="md5:0f9c2204aeb9d862c7d1ae73819d944d" caom2:accMetaChecksum="md5:87bd962f52f61d711a87a2aeda770aa2" caom2:metaProducer="gem2caom2/0.8.1">
-          <caom2:uri>gemini:GEM/N20150217S0380.jpg</caom2:uri>
+          <caom2:uri>gemini:GEMINI/N20150217S0380.jpg</caom2:uri>
           <caom2:productType>preview</caom2:productType>
           <caom2:releaseType>data</caom2:releaseType>
           <caom2:contentType>image/jpeg</caom2:contentType>

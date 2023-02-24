@@ -67,11 +67,10 @@
 # ***********************************************************************
 #
 
-import logging
-
 from collections import deque
 from datetime import datetime, timezone
 
+from caom2pipe import client_composable as clc
 from caom2pipe import data_source_composable as dsc
 from caom2pipe import manage_composable as mc
 
@@ -90,12 +89,13 @@ class IncrementalSource(dsc.DataSource):
     created.
     """
 
-    def __init__(self):
+    def __init__(self, reader):
         super(IncrementalSource, self).__init__(config=None)
         self._max_records_encountered = False
         self._encounter_start = None
         self._encounter_end = None
-        self._logger = logging.getLogger(__name__)
+        self._session = reader._session
+        self._metadata_reader = reader
 
     def get_time_box_work(self, prev_exec_time, exec_time):
         """
@@ -105,39 +105,53 @@ class IncrementalSource(dsc.DataSource):
             records were modified from archive.gemini.edu.
         """
 
-        self._logger.debug(f'Begin get_time_box_work from {prev_exec_time} to '
-                           f'{exec_time}.')
+        self._logger.debug(
+            f'Begin get_time_box_work from {prev_exec_time} to {exec_time}.'
+        )
         # datetime format 2019-12-01T00:00:00.000000
         prev_dt_str = mc.make_time_tz(prev_exec_time).strftime(
-            mc.ISO_8601_FORMAT)
+            mc.ISO_8601_FORMAT
+        )
         exec_dt_str = mc.make_time_tz(exec_time).strftime(mc.ISO_8601_FORMAT)
-        url = f'https://archive.gemini.edu/jsonsummary/canonical/' \
-              f'NotFail/notengineering/' \
-              f'entrytimedaterange={prev_dt_str}%20{exec_dt_str}/' \
-              f'?orderby=entrytime'
+        url = (
+            f'https://archive.gemini.edu/jsonsummary/canonical/'
+            f'NotFail/notengineering/'
+            f'entrytimedaterange={prev_dt_str}%20{exec_dt_str}/'
+            f'?orderby=entrytime'
+        )
 
         # needs to be ordered by timestamps when processed
         self._logger.info(f'Querying {url}')
         entries = deque()
         response = None
         try:
-            response = mc.query_endpoint(url)
+            response = mc.query_endpoint_session(url, self._session)
             if response is None:
-                logging.warning(f'Could not query {url}.')
+                self._logger.warning(f'Could not query {url}.')
             else:
                 metadata = response.json()
                 response.close()
                 if metadata is not None:
                     if len(metadata) == 0:
-                        self._logger.warning(f'No query results returned for '
-                                             f'interval from {prev_exec_time} '
-                                             f'to {exec_time}.')
+                        self._logger.warning(
+                            f'No query results returned for interval from '
+                            f'{prev_exec_time} to {exec_time}.'
+                        )
                     else:
                         for entry in metadata:
                             file_name = entry.get('name')
                             entrytime = mc.make_time_tz(entry.get('entrytime'))
-                            entries.append(dsc.StateRunnerMeta(
-                                file_name, entrytime.timestamp()))
+                            entries.append(
+                                dsc.StateRunnerMeta(
+                                    file_name, entrytime.timestamp()
+                                )
+                            )
+                            uri = mc.build_uri(mc.StorageName.collection, file_name, mc.StorageName.scheme)
+                            # all the other cases where add_json_record is
+                            # called, there's a list as input, so conform to
+                            # that typing here
+                            self._metadata_reader.add_json_record(uri, [entry])
+                            self._metadata_reader.add_file_info_record(uri)
         finally:
             if response is not None:
                 response.close()
@@ -145,6 +159,7 @@ class IncrementalSource(dsc.DataSource):
             self._max_records_encountered = True
             self._encounter_start = prev_exec_time
             self._encounter_end = exec_time
+        self._reporter.capture_todo(len(entries), 0, 0)
         self._logger.debug('End get_time_box_work.')
         return entries
 
@@ -162,9 +177,9 @@ class PublicIncremental(dsc.QueryTimeBoxDataSource):
     """Implements the identification of the work to be done, by querying
     the local TAP service for files that have recently gone public."""
 
-    def __init__(self, config):
+    def __init__(self, config, query_client):
         super(PublicIncremental, self).__init__(config)
-        self._logger = logging.getLogger(__name__)
+        self._query_client = query_client
 
     def get_time_box_work(self, prev_exec_time, exec_time):
         """
@@ -173,36 +188,44 @@ class PublicIncremental(dsc.QueryTimeBoxDataSource):
         :return: a list of file names with time they were modified in /ams,
             structured as an astropy Table (for now).
         """
-
-        self._logger.debug('Entering get_time_box_work')
+        self._logger.debug('Begin get_time_box_work')
         # datetime format 2019-12-01T00:00:00.000000
         prev_dt_str = datetime.fromtimestamp(
-            prev_exec_time, tz=timezone.utc).strftime(mc.ISO_8601_FORMAT)
+            prev_exec_time, tz=timezone.utc
+        ).strftime(mc.ISO_8601_FORMAT)
         exec_dt_str = datetime.fromtimestamp(
-            exec_time, tz=timezone.utc).strftime(mc.ISO_8601_FORMAT)
-        query = f"SELECT A.uri, A.lastModified " \
-                f"FROM caom2.Observation AS O " \
-                f"JOIN caom2.Plane AS P ON O.obsID = P.obsID " \
-                f"JOIN caom2.Artifact AS A ON P.planeID = A.planeID " \
-                f"WHERE P.planeID IN ( " \
-                f"  SELECT A.planeID " \
-                f"  FROM caom2.Observation AS O " \
-                f"  JOIN caom2.Plane AS P ON O.obsID = P.obsID " \
-                f"  JOIN caom2.Artifact AS A ON P.planeID = A.planeID " \
-                f"  WHERE O.collection = '{self._config.collection}' " \
-                f"  GROUP BY A.planeID " \
-                f"  HAVING COUNT(A.artifactID) = 1 ) " \
-                f"AND P.dataRelease > '{prev_dt_str}' " \
-                f"AND P.dataRelease <= '{exec_dt_str}' " \
-                f"ORDER BY O.maxLastModified ASC " \
-                ""
-        result = mc.query_tap_client(query, self._client)
+            exec_time, tz=timezone.utc
+        ).strftime(mc.ISO_8601_FORMAT)
+        query = (
+            f"SELECT A.uri, A.lastModified "
+            f"FROM caom2.Observation AS O "
+            f"JOIN caom2.Plane AS P ON O.obsID = P.obsID "
+            f"JOIN caom2.Artifact AS A ON P.planeID = A.planeID "
+            f"WHERE P.planeID IN ( "
+            f"  SELECT A.planeID "
+            f"  FROM caom2.Observation AS O "
+            f"  JOIN caom2.Plane AS P ON O.obsID = P.obsID "
+            f"  JOIN caom2.Artifact AS A ON P.planeID = A.planeID "
+            f"  WHERE O.collection = '{self._config.collection}' "
+            f"  GROUP BY A.planeID "
+            f"  HAVING COUNT(A.artifactID) = 1 ) "
+            f"AND P.dataRelease > '{prev_dt_str}' "
+            f"AND P.dataRelease <= '{exec_dt_str}' "
+            f"ORDER BY O.maxLastModified ASC "
+            ""
+        )
+        result = clc.query_tap_client(query, self._query_client)
         # results look like:
         # gemini:GEM/N20191202S0125.fits, ISO 8601
 
         entries = deque()
         for row in result:
-            entries.append(dsc.StateRunnerMeta(
-                mc.CaomName(row['uri']).file_name,
-                mc.make_time(row['lastModified']).timestamp()))
+            entries.append(
+                dsc.StateRunnerMeta(
+                    mc.CaomName(row['uri']).file_name,
+                    mc.make_time(row['lastModified']).timestamp(),
+                )
+            )
+        self._reporter.capture_todo(len(entries), 0, 0)
+        self._logger.debug('End get_time_box_work')
         return entries
