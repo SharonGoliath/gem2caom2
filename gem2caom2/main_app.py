@@ -565,9 +565,9 @@ class GeminiMapping(cc.TelescopeMapping):
         bp.set('Chunk.position.axis.function.refCoord.coord1.val', 'get_ra()', extension)
         bp.set('Chunk.position.axis.function.refCoord.coord2.pix', 'get_crpix2()', extension)
         bp.set('Chunk.position.axis.function.refCoord.coord2.val', 'get_dec()', extension)
-        bp.add_attribute('Chunk.position.coordsys', '', extension)
+        # bp.add_attribute('Chunk.position.coordsys', '', extension)
         bp.add_attribute('Chunk.position.equinox', 'EQUINOX', extension)
-        bp.add_attribute('Chunk.position.resolution', '', extension)
+        # bp.add_attribute('Chunk.position.resolution', '', extension)
 
     def _accumulate_chunk_time_axis_blueprint(self, bp, axis):
         bp.configure_time_axis(axis)
@@ -1233,6 +1233,12 @@ class Bhros(GeminiMapping):
     def accumulate_blueprint(self, bp):
         super().accumulate_blueprint(bp)
         bp.set_default('Observation.telescope.name', 'Gemini-South')
+        bp.configure_position_axes((1, 2))
+        self._accumulate_chunk_position_axes_blueprint(bp, 0)
+        bp.clear('Chunk.position.coordsys')
+        bp.add_attribute('Chunk.position.coordsys', 'TRKFRAME')
+        bp.clear('Chunk.position.equinox')
+        bp.add_attribute('Chunk.position.equinox', 'TRKEQUIN')
 
     def get_dec(self, ext):
         # bHROS, TEXES ra/dec not in json
@@ -1291,37 +1297,38 @@ class Bhros(GeminiMapping):
         self._logger.debug(f'End _update_energy')
 
     def _update_position(self, part, chunk, ext):
-        self._headers[0]['CTYPE1'] = 'RA---TAN'
-        self._headers[0]['CTYPE2'] = 'DEC--TAN'
-        self._headers[0]['CUNIT1'] = 'deg'
-        self._headers[0]['CUNIT2'] = 'deg'
-        self._headers[0]['CRVAL1'] = self.get_ra(0)
-        self._headers[0]['CRVAL2'] = self.get_dec(0)
-        self._headers[0]['CDELT1'] = RADIUS_LOOKUP[self._instrument]
-        self._headers[0]['CDELT2'] = RADIUS_LOOKUP[self._instrument]
-        self._headers[0]['CROTA1'] = 0.0
-        self._headers[0]['NAXIS1'] = 1
-        self._headers[0]['NAXIS2'] = 1
-        self._headers[0]['CRPIX1'] = self.get_crpix1(0)
-        self._headers[0]['CRPIX2'] = self.get_crpix2(0)
-        self._headers[0]['CD1_1'] = self.get_cd11(0)
-        self._headers[0]['CD1_2'] = 0.0
-        self._headers[0]['CD2_1'] = 0.0
-        self._headers[0]['CD2_2'] = self.get_cd22(0)
-        self._headers[0]['EQUINOX'] = mc.to_float(
-            self._headers[0].get('TRKEQUIN')
-        )
-        wcs_parser = FitsWcsParser(
-            self._headers[0], self._storage_name.obs_id, 0
-        )
-        if chunk is None:
-            chunk = Chunk()
-            part.chunks.append(chunk)
-        wcs_parser.augment_position(chunk)
-        chunk.position_axis_1 = 1
-        chunk.position_axis_2 = 2
-        chunk.position.coordsys = self._headers[0].get('TRKFRAME')
-        self._logger.debug('End _update_chunk_position')
+        pass
+        # self._headers[0]['CTYPE1'] = 'RA---TAN'
+        # self._headers[0]['CTYPE2'] = 'DEC--TAN'
+        # self._headers[0]['CUNIT1'] = 'deg'
+        # self._headers[0]['CUNIT2'] = 'deg'
+        # self._headers[0]['CRVAL1'] = self.get_ra(0)
+        # self._headers[0]['CRVAL2'] = self.get_dec(0)
+        # self._headers[0]['CDELT1'] = RADIUS_LOOKUP[self._instrument]
+        # self._headers[0]['CDELT2'] = RADIUS_LOOKUP[self._instrument]
+        # self._headers[0]['CROTA1'] = 0.0
+        # self._headers[0]['NAXIS1'] = 1
+        # self._headers[0]['NAXIS2'] = 1
+        # self._headers[0]['CRPIX1'] = self.get_crpix1(0)
+        # self._headers[0]['CRPIX2'] = self.get_crpix2(0)
+        # self._headers[0]['CD1_1'] = self.get_cd11(0)
+        # self._headers[0]['CD1_2'] = 0.0
+        # self._headers[0]['CD2_1'] = 0.0
+        # self._headers[0]['CD2_2'] = self.get_cd22(0)
+        # self._headers[0]['EQUINOX'] = mc.to_float(
+        #     self._headers[0].get('TRKEQUIN')
+        # )
+        # wcs_parser = FitsWcsParser(
+        #     self._headers[0], self._storage_name.obs_id, 0
+        # )
+        # if chunk is None:
+        #     chunk = Chunk()
+        #     part.chunks.append(chunk)
+        # wcs_parser.augment_position(chunk)
+        # chunk.position_axis_1 = 1
+        # chunk.position_axis_2 = 2
+        # chunk.position.coordsys = self._headers[0].get('TRKFRAME')
+        # self._logger.debug('End _update_chunk_position')
 
 
 class Cirpass(GeminiMapping):
