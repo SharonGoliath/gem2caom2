@@ -68,6 +68,7 @@
 
 from os.path import dirname, join, realpath
 from caom2pipe.manage_composable import Config, StorageName
+from gem2caom2.data_source import GEM_BOOKMARK
 import pytest
 
 COLLECTION = 'GEMINI'
@@ -87,6 +88,7 @@ def test_config():
     config.logging_level = 'INFO'
     config.rejected_directory = TEST_DATA_DIR
     config.rejected_file_name = 'rejected.yml'
+    config.data_sources = [GEM_BOOKMARK]
     StorageName.collection = config.collection
     StorageName.preview_scheme = config.preview_scheme
     StorageName.scheme = config.scheme
