@@ -127,10 +127,12 @@ class AbstractGeminiMetadataReader(rdc.MetadataReader):
     def _retrieve_json(self, source_name):
         return retrieve_json(source_name, self._logger, self._session)
 
-    def add_file_info_record(self, uri):
+    def add_file_info_record(self, uri, file_json_metadata=None):
         """add_json_record has already been successfully called"""
         if uri not in self._file_info.keys():
             record = self._json_metadata[uri]
+            if not record and file_json_metadata:
+                record = file_json_metadata
             self._file_info[uri] = FileInfo(
                 id=uri,
                 size=record.get('data_size'),

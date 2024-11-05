@@ -2,7 +2,7 @@
 # ******************  CANADIAN ASTRONOMY DATA CENTRE  *******************
 # *************  CENTRE CANADIEN DE DONNÉES ASTRONOMIQUES  **************
 #
-#  (c) 2018.                            (c) 2018.
+#  (c) 2024.                            (c) 2024.
 #  Government of Canada                 Gouvernement du Canada
 #  National Research Council            Conseil national de recherches
 #  Ottawa, Canada, K1A 0R6              Ottawa, Canada, K1A 0R6
@@ -309,6 +309,50 @@ def _run_state():
 def run_state():
     try:
         result = _run_state()
+        sys.exit(result)
+    except Exception as e:
+        logging.error(e)
+        tb = traceback.format_exc()
+        logging.debug(tb)
+        sys.exit(-1)
+
+
+def _run_page_scrape():
+    """Run incremental processing for observations that are posted on the site archive.gemini.edu. This is for when
+    the incremental query endpoint is unavailable.
+
+    :return 0 if successful, -1 if there's any sort of failure.
+    """
+    (
+        clients,
+        config,
+        metadata_reader,
+        meta_visitors,
+        name_builder,
+    ) = _common_init()
+    incremental_source = data_source.FlieListIncrementalSource(config, metadata_reader)
+    result = rc.run_by_state(
+        config=config,
+        name_builder=name_builder,
+        meta_visitors=meta_visitors,
+        data_visitors=DATA_VISITORS,
+        sources=[incremental_source],
+        clients=clients,
+        metadata_reader=metadata_reader,
+        organizer_module_name='gem2caom2.composable',
+        organizer_class_name='GemOrganizeExecutes',
+    )
+    if incremental_source.max_records_encountered:
+        logging.warning('!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!')
+        logging.warning('Encountered maximum records!!')
+        logging.warning('!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!')
+        result |= -1
+    return result
+
+
+def run_page_scrape():
+    try:
+        result = _run_page_scrape()
         sys.exit(result)
     except Exception as e:
         logging.error(e)

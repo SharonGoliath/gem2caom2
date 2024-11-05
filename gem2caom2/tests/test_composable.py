@@ -2,7 +2,7 @@
 # ******************  CANADIAN ASTRONOMY DATA CENTRE  *******************
 # *************  CENTRE CANADIEN DE DONNÉES ASTRONOMIQUES  **************
 #
-#  (c) 2019.                            (c) 2019.
+#  (c) 2024.                            (c) 2024.
 #  Government of Canada                 Gouvernement du Canada
 #  National Research Council            Conseil national de recherches
 #  Ottawa, Canada, K1A 0R6              Ottawa, Canada, K1A 0R6
@@ -581,6 +581,52 @@ def test_run_is_valid_fails(cap_mock, summary_mock, test_config, tmp_path):
         summary_mock.return_value.add_entries.assert_called_with(1)
     finally:
         os.chdir(orig_cwd)
+
+
+@patch('gem2caom2.composable.GemClientCollection')
+@patch('gem2caom2.gemini_metadata.retrieve_headers')
+@patch('gem2caom2.gemini_metadata.retrieve_json')
+@patch('caom2pipe.execute_composable.OrganizeExecutes.do_one')
+@patch('caom2pipe.manage_composable.query_endpoint_session')
+@patch('caom2pipe.client_composable.query_tap_client')
+def test_run_incremental_with_page_scrape(
+    tap_mock,
+    query_mock,
+    run_mock,
+    json_mock,
+    header_mock,
+    clients_mock,
+    test_config,
+    tmp_path,
+    change_test_dir,
+):
+    #
+    query_mock.side_effect = gem_mocks.mock_query_endpoint_2
+    tap_mock.side_effect = gem_mocks.mock_query_tap
+    json_mock.side_effect = gem_mocks.mock_retrieve_json
+    header_mock.side_effect = gem_mocks._mock_retrieve_headers
+
+    test_config.change_working_directory(tmp_path)
+    test_config.proxy_file_name = 'testproxy.pem'
+    test_config.task_types = [TaskType.INGEST]
+    Config.write_to_file(test_config)
+    with open(test_config.proxy_fqn, 'w') as f:
+        f.write('test content')
+
+    _write_state(
+        prior_timestamp='2021-01-01 20:03:00.000000',
+        end_timestamp=datetime(year=2021, month=1, day=4, hour=23, minute=3, second=0),
+        fqn=test_config.state_fqn,
+    )
+    composable._run_page_scrape()
+    assert run_mock.called, 'run_mock should have been called'
+    args, kwargs = run_mock.call_args
+    test_storage = args[0]
+    assert isinstance(test_storage, gem_name.GemName), type(test_storage)
+    assert test_storage.obs_id == 'GN-2020B-LP-16-353-005', 'wrong obs id'
+    test_fid = 'N20210101S0042'
+    assert test_storage.file_name == f'{test_fid}.fits', 'wrong file_name'
+    assert test_storage.file_id == f'{test_fid}', 'wrong file_id'
 
 
 def _write_state(prior_timestamp=None, end_timestamp=None, fqn=STATE_FILE):

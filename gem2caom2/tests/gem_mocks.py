@@ -90,6 +90,7 @@ from caom2pipe.run_composable import set_logging
 from gem2caom2 import data_source, obs_file_relationship, builder, svofps
 from gem2caom2 import gemini_metadata, fits2caom2_augmentation
 from gem2caom2.gem_name import GemName
+from gem2caom2.scrape import JSON_FILE_LIST
 from gem2caom2.util import Inst
 
 
@@ -1027,3 +1028,26 @@ def _run_test_common(
             assert not test_observable.rejected.is_bad_metadata(storage_name.file_name), 'expect no rejected record'
     finally:
         os.chdir(orig_cwd)
+
+
+def mock_query_endpoint_3(url, timeout=-1):
+    # returns json via response.text, depending on url
+    result = Object()
+    result.text = '[]'
+    if 'jsonfilelist' in url:
+        if 'filepre=S20200602' in url:
+            with open(f'{TEST_DATA_DIR}/edu_query/S20200303_filepre.json',
+                      'r') as f:
+                result.text = f.read()
+    return result
+
+
+def _mock_endpoint_4(url, timeout=-1):
+    result = Object()
+    result.text = None
+    if url.startswith(JSON_FILE_LIST):
+        with open(f'{TEST_DATA_DIR}/page_scrape/jsonfilelist.json', 'r') as f:
+            result.text = f.read()
+    else:
+        raise mc.CadcException('wut?')
+    return result

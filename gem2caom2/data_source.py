@@ -2,7 +2,7 @@
 # ******************  CANADIAN ASTRONOMY DATA CENTRE  *******************
 # *************  CENTRE CANADIEN DE DONNÉES ASTRONOMIQUES  **************
 #
-#  (c) 2020.                            (c) 2020.
+#  (c) 2024.                            (c) 2024.
 #  Government of Canada                 Gouvernement du Canada
 #  National Research Council            Conseil national de recherches
 #  Ottawa, Canada, K1A 0R6              Ottawa, Canada, K1A 0R6
@@ -73,10 +73,14 @@ from caom2pipe import client_composable as clc
 from caom2pipe import data_source_composable as dsc
 from caom2pipe import manage_composable as mc
 
+from gem2caom2.scrape import read_json_file_list_page
+
 
 __all__ = ['GEM_BOOKMARK', 'IncrementalSource', 'PublicIncremental']
 
 GEM_BOOKMARK = 'gemini_timestamp'
+# the limit in number of rows when doing queries from archive.gemini.edu
+MAX_RECORD_COUNT = 10000
 
 
 class IncrementalSource(dsc.IncrementalDataSource):
@@ -218,3 +222,60 @@ class PublicIncremental(dsc.QueryTimeBoxDataSource):
         self._reporter.capture_todo(len(entries), 0, 0)
         self._logger.debug('End get_time_box_work')
         return entries
+
+
+class FileListIncrementalSource(dsc.IncrementalDataSource):
+    """Implements the identification of the work to be done, by querying archive.gemini.edu's jsonfilelist endpoint,
+    in time-boxed chunks."""
+
+    def __init__(self, config, start_key, reader):
+        super(FileListIncrementalSource, self).__init__(config, start_key)
+        # state = mc.State(config.state_fqn)
+        # temp = state.get_bookmark(GEM_BOOKMARK)
+        # make sure last_processed_time is type float
+        # self._last_processed_time = mc.increment_time(temp, 0).timestamp()
+        # # now decide on a timestamp for when to start ingestion for this attempt, say 14 days prior to the last
+        # # ingestion timestamp - WAG
+        # self._start_time_ts = self._last_processed_time - 14 * 1440 * 60
+        self._last_processed_time_s = None
+        self._max_records_encountered = False
+        self._metadata_reader = reader
+
+    def _initialize_end_dt(self):
+        # TODO - this is wrong, it needs to be initialized from archive.gemini.edu query results
+        self._end_dt = datetime.now()
+
+    def get_time_box_work(self, prev_exec_dt, exec_dt):
+        """
+        :param prev_exec_time datetime start of the timestamp chunk
+        :param exec_time datetime end of the timestamp chunk
+        :return: a list of file names with time they were modified from archive.gemini.edu, structured as an astropy
+            Table (for now).
+        """
+        self._logger.debug(f'Begin get_time_box_work from {prev_exec_dt} to {exec_dt}.')
+        temp = read_json_file_list_page(
+            prev_exec_dt.timestamp(), self._last_processed_time_s, self._metadata_reader._session
+        )
+        if len(temp) == 2500:
+            self._max_records_encountered = True
+        entries = deque()
+        for timestamp, jsons in temp.items():
+            for json in jsons:
+                f_name = json['filename']
+                entries.append(dsc.StateRunnerMeta(f_name, timestamp))
+                uri = mc.build_uri(mc.StorageName.collection, f_name, mc.StorageName.scheme)
+                self._metadata_reader.add_file_info_record(uri, json)
+        self._reporter.capture_todo(len(temp), self._rejected_files, self._skipped_files)
+        self._rejected_files = 0
+        self._skipped_files = 0
+        self._logger.debug('End get_time_box_work.')
+        return entries
+
+    def initialize_start_dt(self):
+        super().initialize_start_dt()
+        self._last_processed_time_s = mc.increment_time(self._start_dt, 0).timestamp()
+        # now decide on a timestamp for when to start ingestion for this attempt, say 14 days prior to the last
+        # ingestion timestamp - WAG
+        # do this because archive.gemini.edu retroactively modifies files
+        # self._start_time_ts = self._last_processed_time - 14 * 1440 * 60
+        self._start_dt = datetime.fromtimestamp(self._last_processed_time_s - 14 * 1440 * 60)
