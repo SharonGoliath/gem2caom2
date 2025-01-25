@@ -135,7 +135,7 @@ def _common_init():
     return clients, config, meta_visitors, filter_cache
 
 
-def _run():
+async def _run():
     """
     Uses a todo file with file names, even though Gemini provides
     information about existing data referenced by observation ID.
@@ -145,7 +145,7 @@ def _run():
         source = dsc.ListDirSeparateDataSource(config)
     else:
         source = data_source.GeminiTodoFile(config, filter_cache)
-    return rc.run_by_todo_runner_meta(
+    result = await rc.run_by_todo_runner_meta(
         config=config,
         meta_visitors=meta_visitors,
         data_visitors=DATA_VISITORS,
@@ -155,12 +155,16 @@ def _run():
         organizer_class_name='GeminiOrganizeExecutesRunnerMeta',
         storage_name_ctor=GemName,
     )
+    return result
 
 
+# async def run():
 def run():
     """Wraps _run in exception handling, with sys.exit calls."""
     try:
-        result = _run()
+        import asyncio
+        # result = await _run()
+        result = asyncio.run(_run())
         sys.exit(result)
     except Exception as e:
         logging.error(e)
