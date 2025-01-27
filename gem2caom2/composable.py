@@ -113,10 +113,11 @@ class GemClientCollection(ClientCollection):
         self._svo_session = value
 
 
-def _common_init():
+async def _common_init():
     config = mc.Config()
     config.get_executors()
     clients = GemClientCollection(config)
+    await clients._init(config)
     meta_visitors = META_VISITORS
     gemini_session = mc.get_endpoint_session()
     svofps_session = mc.get_endpoint_session()
@@ -140,12 +141,12 @@ async def _run():
     Uses a todo file with file names, even though Gemini provides
     information about existing data referenced by observation ID.
     """
-    clients, config, meta_visitors, filter_cache = _common_init()
+    clients, config, meta_visitors, filter_cache = await _common_init()
     if config.use_local_files or mc.TaskType.SCRAPE in config.task_types:
         source = dsc.ListDirSeparateDataSource(config)
     else:
         source = data_source.GeminiTodoFile(config, filter_cache)
-    result = await rc.run_by_todo_runner_meta(
+    return await rc.run_by_todo_runner_meta(
         config=config,
         meta_visitors=meta_visitors,
         data_visitors=DATA_VISITORS,
@@ -155,16 +156,13 @@ async def _run():
         organizer_class_name='GeminiOrganizeExecutesRunnerMeta',
         storage_name_ctor=GemName,
     )
-    return result
 
 
-# async def run():
 def run():
     """Wraps _run in exception handling, with sys.exit calls."""
     try:
         import asyncio
-        # result = await _run()
-        result = asyncio.run(_run())
+        result = asyncio.run(_run(), debug=True)
         sys.exit(result)
     except Exception as e:
         logging.error(e)
