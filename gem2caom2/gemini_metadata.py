@@ -411,7 +411,7 @@ class GeminiMetaVisitRunnerMeta(MetaVisitRunnerMeta):
             reporter=reporter,
         )
 
-    def _set_preconditions(self):
+    async def _set_preconditions(self):
         """This is probably not the best approach, but I want to think about where the optimal location for the
         retrieve_file_info and retrieve_headers methods will be long-term. So, for the moment, use them here."""
         self._logger.debug(f'Begin _set_preconditions for {self._storage_name.file_uri}')
@@ -421,7 +421,7 @@ class GeminiMetaVisitRunnerMeta(MetaVisitRunnerMeta):
             if uri not in self._storage_name.metadata:
                 self._storage_name.metadata[uri] = []
                 if '.fits' in uri:
-                    self._storage_name._metadata[uri] = retrieve_headers(
+                    self._storage_name._metadata[uri] = await retrieve_headers(
                         source_name, self._logger, self._clients, self._config
                     )
             # TODO - is there a time when not needing archive.gemini.edu is possible?
@@ -539,13 +539,15 @@ def repair_instrument(in_name):
     return Inst(in_name)
 
 
-def retrieve_headers(source_name, logger, clients, config):
+async def retrieve_headers(source_name, logger, clients, config):
     result = None
     if config.use_local_files:
         result = data_util.get_local_file_headers(source_name)
     else:
         try:
-            result = clients.data_client.get_head(f'{config.scheme}:{config.collection}/{path.basename(source_name)}')
+            result = await clients.data_client.get_head(
+                f'{config.scheme}:{config.collection}/{path.basename(source_name)}'
+            )
         except exceptions.UnexpectedException as e:
             # the exceptions.NotFoundException is turned into exceptions.UnexpectedException in data_util
             # the header is not at CADC, retrieve it from archive.gemini.edu
