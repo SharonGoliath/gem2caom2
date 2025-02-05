@@ -162,7 +162,7 @@ def run():
     """Wraps _run in exception handling, with sys.exit calls."""
     try:
         import asyncio
-        result = asyncio.run(_run(), debug=True)
+        result = asyncio.gather(asyncio.run(_run(), debug=True))
         sys.exit(result)
     except Exception as e:
         logging.error(e)
