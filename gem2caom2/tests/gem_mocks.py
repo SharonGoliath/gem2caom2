@@ -79,6 +79,7 @@ from collections import OrderedDict
 from datetime import datetime, timezone
 from hashlib import md5
 from mock import Mock
+from pathlib import Path
 
 from cadcdata import FileInfo
 from caom2.diff import get_differences
@@ -102,7 +103,8 @@ TEST_FILE = os.path.join(TEST_DATA_DIR, 'from_paul.txt')
 
 FIRST_FILE_LIST = os.path.join(TEST_DATA_DIR, 'S20191010S0.html')
 SECOND_FILE_LIST = os.path.join(TEST_DATA_DIR, 'S20191010S3.html')
-STATE_FILE = '/usr/src/app/state.yml'
+HERE = Path(__file__).resolve().parent
+STATE_FILE = HERE / 'data/state.yml'
 TOO_MANY_FILE_LIST = os.path.join(TEST_DATA_DIR, 'too_many_rows.html')
 
 TEST_TODO_LIST = OrderedDict(
@@ -639,6 +641,7 @@ LOOKUP = {
     'N20190313A0002r': ['N20190313A0002', Inst.ALOPEKE, 'GN-2019A-Q-214'],
     'N20191219A0001b': ['N20191219A0001', Inst.ALOPEKE, 'GN-2020A-Q-132'],
     'N20191219A0001r': ['N20191219A0001', Inst.ALOPEKE, 'GN-2020A-Q-132'],
+    'N20150721G0040': ['', Inst.UNKNOWN, ''],  # test with no data label
 }
 
 call_count = 0
@@ -830,7 +833,8 @@ def mock_query_endpoint_2(url, timeout=-1):
 def mock_query_endpoint_reproduce(url, timeout=-1):
     # returns response.json
     def x():
-        fqn = f'/usr/src/app/gem2caom2/gem2caom2/tests/data/json/reproduce.json'
+        here = Path(__file__).resolve().parent
+        fqn = here / 'data/json/reproduce.json'
         with open(fqn) as f:
             temp = f.read()
         return json.loads(temp)
