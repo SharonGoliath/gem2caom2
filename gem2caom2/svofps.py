@@ -308,7 +308,7 @@ class FilterMetadataCache:
             if result is None:
                 self._logger.warning(f'No filter information found for {repaired_inst}:{repaired_filters}')
 
-            # keep the None result even if there is no filter informaton to stop repeated lookups
+            # keep the None result even if there is no filter information to stop repeated lookups
             if repaired_inst in self._fm:
                 temp = self._fm[repaired_inst]
                 temp[repaired_filters] = result

@@ -100,6 +100,20 @@ def test_repair_filter_name():
         assert test_result == test_subjects[ii][1], 'wrong value'
 
 
+def test_repair_filter_name_miss_policy():
+    # NICI and Alopeke/Zorro drop a name that has no replacement.
+    # Alopeke and Zorro share one map.
+    cases = [
+        (Inst.NICI, 'J', 'J'),
+        (Inst.ALOPEKE, 'open', 'open'),
+        (Inst.ALOPEKE, 'Red-832', 'EO_832'),
+        (Inst.ZORRO, 'Red-832', 'EO_832'),
+    ]
+    for instrument, filter_name, expected in cases:
+        test_result = svofps.FilterMetadataCache._repair_filter_name_for_svo(instrument, filter_name)
+        assert test_result == expected, f'{instrument} {filter_name}'
+
+
 @patch('caom2pipe.astro_composable.get_vo_table_session')
 def test_get_filter_metadata(get_vo_mock):
     get_vo_mock.side_effect = gem_mocks.mock_get_votable
