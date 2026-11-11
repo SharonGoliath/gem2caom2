@@ -98,6 +98,18 @@ from gem2caom2.util import Inst
 
 THIS_DIR = os.path.dirname(os.path.realpath(__file__))
 TEST_DATA_DIR = os.path.join(THIS_DIR, 'data')
+
+
+def use_test_data_cache(test_config):
+    """Point cache_file_name at tests/data/cache.yml.
+
+    An absolute name still resolves there after change_working_directory
+    moves the working directory to a temp path. os.path.join keeps an
+    absolute second component.
+    """
+    test_config.cache_file_name = os.path.join(TEST_DATA_DIR, 'cache.yml')
+
+
 PLUGIN = os.path.join(os.path.dirname(THIS_DIR), 'main_app.py')
 TEST_FILE = os.path.join(TEST_DATA_DIR, 'from_paul.txt')
 
@@ -1065,6 +1077,7 @@ def _run_test_common(
     test_config.change_working_directory(tmp_path.as_posix())
     test_config.proxy_file_name = 'test_proxy.pem'
     test_config.logging_level = 'ERROR'
+    use_test_data_cache(test_config)
     test_config.write_to_file(test_config)
     set_logging(test_config)
 

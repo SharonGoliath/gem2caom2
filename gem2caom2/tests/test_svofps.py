@@ -70,8 +70,15 @@
 from gem2caom2.util import Inst
 from gem2caom2 import svofps
 
+from caom2pipe.manage_composable import CadcException
 from mock import patch, Mock, ANY
 import gem_mocks
+import pytest
+
+
+@pytest.fixture(autouse=True)
+def _chdir_test_data(monkeypatch, test_data_dir):
+    monkeypatch.chdir(test_data_dir)
 
 
 test_subjects = {
@@ -109,3 +116,12 @@ def test_get_filter_metadata(get_vo_mock):
     test_result = test_subject.get_filter_metadata(Inst.NIRI, 'filters', 'telescope_name')
     assert get_vo_mock.call_count == 2, 'wrong number of calls'
     assert test_result is None, 'do not expect a result this time either'
+
+
+def test_unknown_instrument_key(monkeypatch, tmp_path):
+    svofps.FilterMetadataCache._filter_replacements = None
+    monkeypatch.chdir(tmp_path)
+    (tmp_path / 'cache.yml').write_text('filter_replacement:\n  NotAnInstrument:\n    A: B\n')
+    (tmp_path / 'config.yml').write_text(f"working_directory: '{tmp_path}'\ncache_file_name: cache.yml\n")
+    with pytest.raises(CadcException, match='NotAnInstrument'):
+        svofps.FilterMetadataCache._repair_filter_name_for_svo(Inst.NIRI, 'Kprime_G0206')
