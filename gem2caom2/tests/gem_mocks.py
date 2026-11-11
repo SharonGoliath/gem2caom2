@@ -966,6 +966,7 @@ def compare(expected_fqn, actual_fqn, observation):
                     f'Differences found in observation {expected.observation_id}\n{compare_text}.\nCheck {actual_fqn}'
                 )
         else:
+            mc.write_obs_to_file(observation, actual_fqn)
             raise AssertionError(f'No expected observation here {expected_fqn}. See actual here {actual_fqn}')
     else:
         raise AssertionError(f'No observation created for comparison with {expected_fqn}')

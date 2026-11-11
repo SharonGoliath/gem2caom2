@@ -183,6 +183,13 @@ class FilterMetadataCache:
         self._fm = {}
         self._logger = logging.getLogger(self.__class__.__name__)
 
+    def __str__(self):
+        msg = ''
+        for key, value in self._fm.items():
+            msg = f'{msg},\n{key}:{value}'
+        msg = f'{msg}\n'
+        return msg
+
     @property
     def svo_session(self):
         return self._svo_session
@@ -296,6 +303,10 @@ class FilterMetadataCache:
                 result.adjust_resolving_power()
         else:
             result = self.filter_metadata(repaired_inst, repaired_filters)
+            if result is None:
+                self._logger.warning(f'No filter information found for {repaired_inst}:{repaired_filters}')
+
+            # keep the None result even if there is no filter informaton to stop repeated lookups
             if repaired_inst in self._fm:
                 temp = self._fm[repaired_inst]
                 temp[repaired_filters] = result
